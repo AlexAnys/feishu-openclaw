@@ -184,7 +184,7 @@ function shouldRespondInGroup(text, mentions) {
   const verbs = ['帮', '麻烦', '请', '能否', '可以', '解释', '看看', '排查', '分析', '总结', '写', '改', '修', '查', '对比', '翻译'];
   if (verbs.some(k => text.includes(k))) return true;
   // Customize this list with your bot's name
-  if (/^(clawdbot|bot|助手|智能体)[\s,:，：]/i.test(text)) return true;
+  if (/^(alen|clawdbot|bot|助手|智能体)[\s,:，：]/i.test(text)) return true;
   return false;
 }
 
@@ -244,8 +244,17 @@ const dispatcher = new Lark.EventDispatcher({}).register({
           if (timer) clearTimeout(timer);
         }
 
-        // Skip empty or NO_REPLY
-        if (!reply || reply === 'NO_REPLY') return;
+        // Skip empty or NO_REPLY (trim to handle leading/trailing whitespace)
+        const trimmed = (reply || '').trim();
+        if (!trimmed || trimmed === 'NO_REPLY' || trimmed.endsWith('NO_REPLY')) {
+          // Clean up "thinking…" placeholder if it was sent
+          if (placeholderId) {
+            try {
+              await client.im.v1.message.delete({ path: { message_id: placeholderId } });
+            } catch {}
+          }
+          return;
+        }
 
         // If we sent "thinking…", update it; otherwise send new message
         if (placeholderId) {
