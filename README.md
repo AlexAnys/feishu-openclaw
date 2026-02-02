@@ -2,7 +2,7 @@
 飞书 × AI 助手 **独立桥接器** — 无需公网服务器  
 Feishu × AI Assistant **standalone bridge** — no public server required
 
-## 🔥 2026.02.02 重磅更新，如有帮助，欢迎🌟🌟让更多人看到
+## 🔥 2026.02.02 重磅更新，感谢大家的支持
 
 这次更新解决了“能聊天但媒体不通”的所有相关痛点：
 
