@@ -40,7 +40,7 @@
 ## 🔄 从旧版迁移到官方插件（保姆级）
 
 > 适用于：之前使用本项目（独立桥接或 npm 插件）的老用户。  
-> 预计耗时：10 分钟。
+> 两种方式任选其一，效果一样。
 
 ### 迁移前须知
 
@@ -49,23 +49,38 @@
 - ✅ 迁移后聊天记录不受影响（记录在飞书端）
 - ⚠️ 迁移过程中机器人会短暂离线（几分钟）
 
-### 第一步：准备好你的飞书凭证
+---
 
-你需要两样东西：
+### 方式一：通过 OpenClaw 升级（推荐，最省事）
 
-- **App ID**：格式如 `cli_xxxxxxxxx`
-- **App Secret**
+如果你的 OpenClaw 版本 ≥ 2026.2，升级后官方飞书插件已经内置，只需要：
 
-> 之前可能保存在 `~/.clawdbot/secrets/feishu_app_secret`，可以 `cat` 查看。  
+#### 1. 升级 OpenClaw
+
+```bash
+openclaw update
+```
+
+升级完成后会自动重启网关。
+
+#### 2. 添加飞书渠道
+
+```bash
+openclaw channels add
+```
+
+选择 **Feishu** → 粘贴你的 **App ID** → 粘贴你的 **App Secret**。
+
+> App ID 和 App Secret 在哪？之前可能保存在 `~/.clawdbot/secrets/feishu_app_secret`，可以 `cat` 查看。  
 > 如果找不到，去 [飞书开放平台](https://open.feishu.cn/app) → 你的应用 → **凭证与基础信息** 重新复制。
 
-### 第二步：补全飞书应用权限
+#### 3. 补全飞书应用权限
 
-官方插件支持更多功能（图片、文件、流式输出等），需要补几个权限。
+官方插件支持图片、文件、流式输出等更多功能，需要在飞书开放平台补几个权限：
 
 1. 打开 [飞书开放平台](https://open.feishu.cn/app) → 进入你的应用
-2. 进入 **权限管理** 页面
-3. 点击 **批量导入** 按钮，粘贴以下内容一键导入：
+2. 进入 **权限管理** → 点击 **批量导入**
+3. 粘贴以下内容一键导入：
 
 ```json
 {
@@ -107,34 +122,67 @@
 
 4. 导入后 → **创建新版本** → **发布**（让新权限生效）
 
-### 第三步：通过 OpenClaw 一键迁移
-
-打开你电脑的 **终端（Terminal）**，依次运行：
+#### 4. 清理旧插件/桥接
 
 ```bash
-# 1. 安装官方飞书插件
+# 移除旧的 npm 插件（如果装过）
+openclaw plugins remove feishu-openclaw 2>/dev/null
+
+# 停掉旧的桥接服务（如果用过独立桥接）
+launchctl unload ~/Library/LaunchAgents/com.clawdbot.feishu-bridge.plist 2>/dev/null
+
+# 重启网关
+openclaw gateway restart
+```
+
+然后跳到下方 [验证](#验证) 确认一切正常。
+
+---
+
+### 方式二：手动安装插件 + 配置
+
+适用于不想整体升级 OpenClaw、只想加飞书的情况。
+
+#### 1. 准备好你的飞书凭证
+
+- **App ID**：格式如 `cli_xxxxxxxxx`
+- **App Secret**
+
+> 之前可能保存在 `~/.clawdbot/secrets/feishu_app_secret`，可以 `cat` 查看。  
+> 如果找不到，去 [飞书开放平台](https://open.feishu.cn/app) → 你的应用 → **凭证与基础信息** 重新复制。
+
+#### 2. 补全飞书应用权限
+
+（同方式一的第 3 步，权限 JSON 一样，这里不重复粘贴——往上翻到方式一的权限 JSON 复制即可。）
+
+1. [飞书开放平台](https://open.feishu.cn/app) → 你的应用 → **权限管理** → **批量导入** → 粘贴上方 JSON
+2. 导入后 → **创建新版本** → **发布**
+
+#### 3. 安装并配置
+
+```bash
+# 安装官方飞书插件
 openclaw plugins install @openclaw/feishu
 
-# 2. 添加飞书渠道（交互式引导，跟着提示走）
+# 添加飞书渠道（交互式引导）
 openclaw channels add
 #    → 选择 Feishu
 #    → 粘贴 App ID
 #    → 粘贴 App Secret
 
-# 3. 如果之前装过旧的 npm 插件，移除它
+# 移除旧的 npm 插件（如果装过）
 openclaw plugins remove feishu-openclaw 2>/dev/null
 
-# 4. 重启网关
+# 停掉旧的桥接服务（如果用过独立桥接）
+launchctl unload ~/Library/LaunchAgents/com.clawdbot.feishu-bridge.plist 2>/dev/null
+
+# 重启网关
 openclaw gateway restart
 ```
 
-如果之前用的是独立桥接（bridge.mjs + launchd），还需要停掉旧服务：
+---
 
-```bash
-launchctl unload ~/Library/LaunchAgents/com.clawdbot.feishu-bridge.plist 2>/dev/null
-```
-
-### 第四步：验证
+### 验证
 
 ```bash
 # 查看日志，确认飞书连接成功
